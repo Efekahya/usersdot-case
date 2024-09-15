@@ -4,9 +4,10 @@ import { createDB } from "./utils/createDB";
 import { populateDB } from "./utils/populateDB";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
   await createDB();
   await populateDB();
+  const app = await NestFactory.create(AppModule, { cors: true });
+  app.setGlobalPrefix("api/v1");
   await app.listen(3000);
 }
 bootstrap();

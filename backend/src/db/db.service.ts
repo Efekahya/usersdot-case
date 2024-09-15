@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { Pool } from "pg";
 import { ConfigService } from "@nestjs/config";
+import { QueryResult } from "src/types";
 
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
@@ -24,27 +25,24 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     await this.pool.connect();
-    console.log("Database connected");
+    console.info("Database connected");
   }
 
   async onModuleDestroy() {
     await this.pool.end();
-    console.log("Database connection closed");
+    console.info("Database connection closed");
   }
 
   async query<T>(
     text: string,
-    params?: any[]
-  ): Promise<{
-    success: boolean;
-    data?: T;
-    error?: string;
-  }> {
+    params?: unknown[],
+    parser?: (data: T[]) => T[]
+  ): Promise<QueryResult<T[]>> {
     try {
       const result = await this.pool.query(text, params);
       return {
         success: true,
-        data: result.rows
+        data: parser ? parser(result.rows as T[]) : (result.rows as T[])
       };
     } catch (error) {
       this.logger.error(error.message);

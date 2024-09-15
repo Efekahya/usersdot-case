@@ -1,0 +1,21 @@
+.userTable {
+  width: 100%;
+  border-collapse: collapse;
+  max-width: 100vw;
+  overflow: auto;
+  margin-top: 24px;
+  border-radius: 8px;
+  padding-bottom: 24px;
+  --mask: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 1) 90%,
+      rgba(0, 0, 0, 0) 100%
+    )
+    100% 50% / 100% 100% repeat-x;
+
+  mask: var(--mask);
+
+  table {
+    min-width: 1200px;
+  }
+}

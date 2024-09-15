@@ -1,24 +1,15 @@
 module.exports = {
   extends: [
     "mantine",
-    "plugin:@next/next/recommended",
-    "plugin:jest/recommended",
     "plugin:@typescript-eslint/recommended",
     "prettier",
     "plugin:import/recommended",
     "plugin:import/typescript"
   ],
-  plugins: [
-    "testing-library",
-    "jest",
-    "@typescript-eslint",
-    "react-hooks",
-    "import"
-  ],
+  plugins: [, "@typescript-eslint", "react-hooks", "import"],
   overrides: [
     {
-      files: ["**/?(*.)+(spec|test).[jt]s?(x)"],
-      extends: ["plugin:testing-library/react"]
+      files: ["**/?(*.)+(spec|test).[jt]s?(x)"]
     }
   ],
   parserOptions: {
@@ -26,7 +17,7 @@ module.exports = {
   },
   rules: {
     radix: "off",
-    "no-console": "warn",
+    "no-console": ["error", { allow: ["warn", "error", "info"] }],
     "react/react-in-jsx-scope": "off",
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
@@ -34,6 +25,7 @@ module.exports = {
     "import/extensions": "off",
     "linebreak-style": "off",
     "@typescript-eslint/no-shadow": "off",
+    "@typescript-eslint/no-throw-literal": "off",
     "@typescript-eslint/no-unused-vars": [
       "error",
       {
