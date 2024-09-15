@@ -1,13 +1,19 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { User } from "./interfaces/user.interface";
 import { DatabaseService } from "src/db/db.service";
 import * as bcrypt from "bcrypt";
+import { QueryResult } from "src/types";
+import { User } from "./interfaces/user.interface";
 
 const generateSetString = (user: Partial<User>) => {
   const keys = Object.keys(user);
   return keys.map((key, i) => `"${key}" = $${i + 1}`).join(", ");
 };
 
+type GetAllResult = QueryResult<{
+  users: Omit<User, "password">[];
+  count: number;
+  pageCount: number;
+}>;
 @Injectable()
 export class UsersService {
   constructor(private client: DatabaseService) {}
@@ -17,7 +23,7 @@ export class UsersService {
     page: string = "0",
     pageSize: string = "20",
     search: string = ""
-  ): Promise<Omit<User, "password">[]> {
+  ): Promise<GetAllResult> {
     const offset = parseInt(page) * parseInt(pageSize);
     const nan = isNaN(offset);
 
@@ -30,37 +36,72 @@ export class UsersService {
     const searchables = ["name", "surname", "email", "country", "district"];
     const searchQuery = searchables.map(s => `${s} ILIKE $1`).join(" OR ");
 
+    const countQuery = {
+      text: `SELECT COUNT(*) FROM users WHERE ${searchQuery}`,
+      values: [`%${search}%`]
+    };
+
+    const countRes = await this.client.query<{ count: number }>(
+      countQuery.text,
+      countQuery.values
+    );
+
+    if (!countRes.success) {
+      return countRes as GetAllResult;
+    }
+
+    const count = countRes.data[0].count;
+
     const query = {
-      text: `SELECT * FROM users WHERE ${searchQuery} OFFSET $2 LIMIT $3`,
+      text: `SELECT * FROM users WHERE ${searchQuery} ORDER BY id OFFSET $2 LIMIT $3`,
       values: [`%${search}%`, offset, pageSize]
     };
 
-    return this.client
-      .query<User[]>(query.text, query.values)
-      .then(res =>
-        res.data.map((row: User) => ({ ...row, password: undefined }))
-      );
+    const res = await this.client.query<User>(query.text, query.values);
+
+    if (res.success) {
+      return {
+        success: true,
+        data: {
+          users: res.data.map(user => ({ ...user, password: undefined })),
+          count,
+          pageCount: Math.ceil(count / parseInt(pageSize))
+        }
+      };
+    }
+
+    return {
+      success: false,
+      error: res.error
+    };
   }
 
-  async getById(id: number): Promise<Omit<User, "password">> {
+  async getById(id: number): Promise<QueryResult<Omit<User, "password">>> {
     const query = {
       text: "SELECT * FROM users WHERE id = $1",
       values: [id]
     };
 
-    return this.client.query<User[]>(query.text, query.values).then(res => {
-      if (res.data.length === 0) {
-        return null;
-      }
+    const res = await this.client.query<User[]>(
+      query.text,
+      query.values,
+      data => data.map(user => ({ ...user, password: undefined }))
+    );
 
-      return { ...res.data[0], password: undefined };
-    });
+    return res as QueryResult<Omit<User, "password">>;
   }
 
   async insertUsersOne(
     user: Omit<User, "id">
-  ): Promise<Omit<User, "password"> | string> {
-    const hashedPassword = await bcrypt.hash(user.password, 10);
+  ): Promise<QueryResult<Omit<User, "password">>> {
+    let hashedPassword: string;
+
+    try {
+      hashedPassword = await bcrypt.hash(user.password, 10);
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+
     const query = {
       text: `INSERT INTO users (name, surname, email, password, age, country, district, role, "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING *`,
       values: [
@@ -75,30 +116,80 @@ export class UsersService {
       ]
     };
 
-    const res = await this.client.query<User>(query.text, query.values);
+    const res = await this.client.query<User>(
+      query.text,
+      query.values,
+      data => ({ ...data, password: undefined })
+    );
 
-    if (res.success) {
-      return { ...res.data[0], password: undefined };
-    }
-
-    return res.error;
+    return res as QueryResult<Omit<User, "password">>;
   }
 
   async updateUsersOne(
-    id: number,
-    user: Partial<User>
-  ): Promise<Omit<User, "password"> | string> {
-    const query = {
-      text: `UPDATE users SET ${generateSetString(user)} WHERE id = $${Object.keys(user).length + 1} RETURNING *`,
-      values: [...Object.values(user), id]
-    };
+    user: Partial<User & { oldPassword: string }>
+  ): Promise<QueryResult<Omit<User, "password">>> {
+    const userCopy = { ...user };
+    delete userCopy.id;
+    delete userCopy.oldPassword;
+    delete userCopy.createdAt;
+    delete userCopy.updatedAt;
 
-    const res = await this.client.query<User>(query.text, query.values);
+    const keys = Object.keys(userCopy);
 
-    if (res.success) {
-      return { ...res.data[0], password: undefined };
+    if (keys.length === 0) {
+      return { success: false, error: "No fields to update" };
     }
 
-    return res.error;
+    if (user.id === undefined) {
+      return { success: false, error: "No id provided" };
+    }
+
+    if (user.password && !user.oldPassword) {
+      return {
+        success: false,
+        error: "Old password is required to change password"
+      };
+    }
+
+    if (user.password) {
+      const passwordQuery = {
+        text: "SELECT password FROM users WHERE id = $1",
+        values: [user.id]
+      };
+
+      const passwordRes = await this.client.query<{ password: string }>(
+        passwordQuery.text,
+        passwordQuery.values
+      );
+
+      if (!passwordRes.success) {
+        return passwordRes as QueryResult<Omit<User, "password">>;
+      }
+
+      const password = passwordRes.data[0].password;
+
+      if (!(await bcrypt.compare(user.oldPassword, password))) {
+        return { success: false, error: "Old password is wrong" };
+      }
+
+      userCopy.password = await bcrypt.hash(user.password, 10);
+    }
+
+    const query = {
+      text: `UPDATE users SET ${generateSetString(userCopy)} WHERE id = ${user.id} RETURNING *`,
+      values: Object.values(userCopy)
+    };
+
+    const res = await this.client.query<User[]>(
+      query.text,
+      query.values,
+      data => data.map(user => ({ ...user, password: undefined }))
+    );
+
+    if (res.success && res.data.length === 0) {
+      return { success: false, error: "User not found" };
+    }
+
+    return res as QueryResult<Omit<User, "password">>;
   }
 }

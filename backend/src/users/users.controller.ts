@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Post, Req } from "@nestjs/common";
-import { UsersService } from "./users.service";
 import { Request } from "express";
+import { UsersService } from "./users.service";
 import { User } from "./interfaces/user.interface";
 
 @Controller("users")
@@ -31,7 +31,8 @@ export class UsersController {
 
   @Post("update")
   async updateUsersOne(@Req() request: Request) {
-    const { id, ...body } = request.body as User;
-    return this.usersService.updateUsersOne(id, body);
+    return this.usersService.updateUsersOne(
+      request.body as User & { oldPassword: string }
+    );
   }
 }

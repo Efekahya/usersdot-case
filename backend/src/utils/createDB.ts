@@ -4,7 +4,7 @@ const client = new Client({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT
+  port: parseInt(process.env.DB_PORT)
 });
 
 export const checkDB = async (name: string) => {
@@ -28,6 +28,6 @@ export const createDB = async () => {
   }
 
   await client.query(`CREATE DATABASE ${process.env.DB_NAME}`);
-  console.log("Database created");
+  console.info("Database created");
   await client.end();
 };

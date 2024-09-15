@@ -7,7 +7,7 @@ const client = new Client({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
+  port: parseInt(process.env.DB_PORT),
   database: process.env.DB_NAME
 });
 
@@ -46,7 +46,7 @@ export const populateDB = async () => {
   const isTableEmpty = await client.query("SELECT * FROM users");
 
   if (isTableEmpty.rowCount > 0) {
-    console.log("Database already populated");
+    console.info("Database already populated");
     await client.end();
     return;
   }
@@ -60,6 +60,13 @@ export const populateDB = async () => {
   )}`;
 
   const res = await client.query(populateQueryString);
-  console.log("Database populated");
+
+  if (res.rowCount === 0) {
+    console.error("Database population failed");
+    await client.end();
+    return;
+  }
+
+  console.info("Database populated");
   await client.end();
 };
