@@ -17,6 +17,9 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v4
 
+      - name: Enable corepack
+        run: npm install -g corepack && corepack enable
+
       - name: cd client
         run: cd client
 
