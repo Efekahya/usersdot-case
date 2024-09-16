@@ -2,8 +2,8 @@
   width: 200px;
   height: 100px;
   background: linear-gradient(to right, #ff8808 30%, #2700a1 50%);
-  -webkit-mask: url("navbar-logo.svg") no-repeat center/contain;
-  mask: url("navbar-logo.svg") no-repeat center/contain;
+  -webkit-mask: url("../../assets/navbar-logo.svg") no-repeat center/contain;
+  mask: url("../../assets/navbar-logo.svg") no-repeat center/contain;
   background-size: 500% auto;
 
   animation: text-shine 5s ease-in-out infinite alternate;
