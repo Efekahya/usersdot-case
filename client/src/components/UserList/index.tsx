@@ -75,17 +75,34 @@ const UserList = ({
 
   return (
     <>
-      <Flex gap="sm" justify="space-between">
-        <Flex gap="sm" align="center">
+      <Flex
+        gap="sm"
+        justify="space-between"
+        direction={{
+          xs: "row",
+          base: "column"
+        }}
+      >
+        <Flex
+          gap="sm"
+          align="center"
+          justify={{
+            xs: "start",
+            base: "space-between"
+          }}
+        >
           <TextInput
             mt="lg"
-            w="240px"
+            w={{
+              xs: "240px",
+              base: "100%"
+            }}
             placeholder="Search"
             onChange={event => {
               debouncedSearch(event.currentTarget.value);
             }}
           />
-          <Text c="gray" mt="lg">
+          <Text c="gray" mt="lg" flex="1 0 auto">
             {count} users
           </Text>
         </Flex>
@@ -166,7 +183,15 @@ const UserList = ({
             </Table.Tbody>
           </Table>
         </div>
-        <Flex justify="end" align="center">
+        <Flex
+          justify="end"
+          align="center"
+          direction={{
+            xs: "row",
+            base: "column"
+          }}
+          gap="lg"
+        >
           <div
             style={{
               position: "relative"
@@ -181,7 +206,6 @@ const UserList = ({
             <Pagination
               total={pageCount ?? 0}
               defaultValue={1}
-              withEdges
               onChange={onPageChange}
             />
           </div>
@@ -192,7 +216,6 @@ const UserList = ({
             allowDeselect={false}
             checkIconPosition="right"
             onChange={value => onPageSelect(value ?? "")}
-            style={{ marginLeft: "1rem" }}
           />
         </Flex>
       </Flex>
