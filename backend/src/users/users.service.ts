@@ -17,6 +17,8 @@ type GetAllResult = QueryResult<{
   users: UserWithoutPassword[];
   count: number;
   pageCount: number;
+  sort?: string;
+  order?: string;
 }>;
 @Injectable()
 export class UsersService {
@@ -26,7 +28,9 @@ export class UsersService {
   async getAll(
     page: string = "0",
     pageSize: string = "20",
-    search: string = ""
+    search: string = "",
+    sort: string = "id",
+    order: string = "ASC"
   ): Promise<GetAllResult> {
     const offset = parseInt(page) * parseInt(pageSize);
     const nan = isNaN(offset);
@@ -57,8 +61,8 @@ export class UsersService {
     const count = countRes.data[0].count;
 
     const query = {
-      text: `SELECT * FROM users WHERE ${searchQuery} ORDER BY id OFFSET $2 LIMIT $3`,
-      values: [`%${search}%`, offset, pageSize]
+      text: `SELECT * FROM users WHERE ${searchQuery} ORDER BY "${sort}" ${order} LIMIT $2 OFFSET $3`,
+      values: [`%${search}%`, parseInt(pageSize), offset]
     };
 
     const res = await this.client.query<User>(query.text, query.values, data =>

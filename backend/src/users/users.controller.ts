@@ -9,12 +9,14 @@ export class UsersController {
 
   @Get()
   async getAll(@Req() request: Request) {
-    const { page, pageSize, search } = request.query as {
+    const { page, pageSize, search, sort, order } = request.query as {
       page?: string;
       pageSize?: string;
       search?: string;
+      sort?: string;
+      order?: string;
     };
-    return this.usersService.getAll(page, pageSize, search);
+    return this.usersService.getAll(page, pageSize, search, sort, order);
   }
 
   @Get(":id")

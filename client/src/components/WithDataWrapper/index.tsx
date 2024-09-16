@@ -15,7 +15,7 @@ interface WithDataWrapperProps<T> {
 // couldn't find a way to prevent flashing of the loading text.
 // tried to use a state to keep track of the previous rendered component but it didn't prevent flashing.
 // so I'm not going to use this component in the project.
-// I'm going to use the normal way of fetching data in the components.
+// Instead going to use the normal way of fetching data in the components.
 const WithDataWrapper = <T,>({
   url,
   children,
