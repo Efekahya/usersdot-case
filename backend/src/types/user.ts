@@ -11,3 +11,6 @@ export interface User {
   createdAt: Date | string;
   updatedAt: Date | string;
 }
+
+export type UserWithoutPassword = Omit<User, "password">;
+export type UserWithOldPassword = User & { oldPassword: string };

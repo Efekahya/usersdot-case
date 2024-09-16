@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Post, Req } from "@nestjs/common";
 import { Request } from "express";
 import { UsersService } from "./users.service";
-import { User } from "./interfaces/user.interface";
+import type { User, UserWithOldPassword } from "../types/user";
 
 @Controller("users")
 export class UsersController {
@@ -32,7 +32,7 @@ export class UsersController {
   @Post("update")
   async updateUsersOne(@Req() request: Request) {
     return this.usersService.updateUsersOne(
-      request.body as User & { oldPassword: string }
+      request.body as UserWithOldPassword
     );
   }
 }

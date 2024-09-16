@@ -2,7 +2,11 @@ import { Injectable, Logger } from "@nestjs/common";
 import { DatabaseService } from "src/db/db.service";
 import * as bcrypt from "bcrypt";
 import { QueryResult } from "src/types";
-import { User } from "./interfaces/user.interface";
+import type {
+  User,
+  UserWithOldPassword,
+  UserWithoutPassword
+} from "../types/user";
 
 const generateSetString = (user: Partial<User>) => {
   const keys = Object.keys(user);
@@ -10,7 +14,7 @@ const generateSetString = (user: Partial<User>) => {
 };
 
 type GetAllResult = QueryResult<{
-  users: Omit<User, "password">[];
+  users: UserWithoutPassword[];
   count: number;
   pageCount: number;
 }>;
@@ -57,43 +61,40 @@ export class UsersService {
       values: [`%${search}%`, offset, pageSize]
     };
 
-    const res = await this.client.query<User>(query.text, query.values);
+    const res = await this.client.query<User>(query.text, query.values, data =>
+      data.map(user => ({ ...user, password: undefined }))
+    );
 
     if (res.success) {
       return {
         success: true,
         data: {
-          users: res.data.map(user => ({ ...user, password: undefined })),
+          users: res.data,
           count,
           pageCount: Math.ceil(count / parseInt(pageSize))
         }
       };
     }
 
-    return {
-      success: false,
-      error: res.error
-    };
+    return res as GetAllResult;
   }
 
-  async getById(id: number): Promise<QueryResult<Omit<User, "password">>> {
+  async getById(id: number): Promise<QueryResult<UserWithoutPassword>> {
     const query = {
       text: "SELECT * FROM users WHERE id = $1",
       values: [id]
     };
 
-    const res = await this.client.query<User[]>(
-      query.text,
-      query.values,
-      data => data.map(user => ({ ...user, password: undefined }))
+    const res = await this.client.query<User>(query.text, query.values, data =>
+      data.map(user => ({ ...user, password: undefined }))
     );
 
-    return res as QueryResult<Omit<User, "password">>;
+    return res as QueryResult<UserWithoutPassword>;
   }
 
   async insertUsersOne(
     user: Omit<User, "id">
-  ): Promise<QueryResult<Omit<User, "password">>> {
+  ): Promise<QueryResult<UserWithoutPassword>> {
     let hashedPassword: string;
 
     try {
@@ -122,12 +123,12 @@ export class UsersService {
       data => ({ ...data, password: undefined })
     );
 
-    return res as QueryResult<Omit<User, "password">>;
+    return res as QueryResult<UserWithoutPassword>;
   }
 
   async updateUsersOne(
-    user: Partial<User & { oldPassword: string }>
-  ): Promise<QueryResult<Omit<User, "password">>> {
+    user: Partial<UserWithOldPassword>
+  ): Promise<QueryResult<UserWithoutPassword>> {
     const userCopy = { ...user };
     delete userCopy.id;
     delete userCopy.oldPassword;
@@ -163,7 +164,7 @@ export class UsersService {
       );
 
       if (!passwordRes.success) {
-        return passwordRes as QueryResult<Omit<User, "password">>;
+        return passwordRes as QueryResult<UserWithoutPassword>;
       }
 
       const password = passwordRes.data[0].password;
@@ -190,6 +191,6 @@ export class UsersService {
       return { success: false, error: "User not found" };
     }
 
-    return res as QueryResult<Omit<User, "password">>;
+    return res as QueryResult<UserWithoutPassword>;
   }
 }
