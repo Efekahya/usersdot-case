@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { notifications } from "@mantine/notifications";
-import GradientTitle from "@/components/GradientTitle";
 import UserEditModal from "@/components/UserEditModal";
 import UserList from "@/components/UserList";
 import { GetAllUsersResult } from "@/types/results";
 import { User } from "@/types/user";
+import Logo from "@/components/Logo";
+
+export interface Sort {
+  key: keyof User;
+  order: "asc" | "desc";
+}
 
 const initialEditUser: User = {
   id: -1,
@@ -33,6 +38,7 @@ export function HomePage() {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState("10");
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<Sort>({ key: "id", order: "asc" });
   const [loading, setLoading] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(-1);
   const [modalOpened, setModalOpened] = useState(false);
@@ -40,12 +46,12 @@ export function HomePage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URI}/users?page=${page}&pageSize=${pageSize}&search=${search}`
+      `${import.meta.env.VITE_BACKEND_URI}/users?page=${page}&pageSize=${pageSize}&search=${search}&sort=${sort.key}&order=${sort.order}`
     );
     const data = await response.json();
     setData(data.data);
     setLoading(false);
-  }, [page, pageSize, search]);
+  }, [page, pageSize, search, sort.key, sort.order]);
 
   useEffect(() => {
     fetchData();
@@ -89,6 +95,7 @@ export function HomePage() {
       });
       return;
     }
+
     setData(prev => {
       if (!prev) {
         return prev;
@@ -100,10 +107,13 @@ export function HomePage() {
         )
       };
     });
+
     setModalOpened(false);
+
     setTimeout(() => {
       setSelectedUserId(-1);
     }, 300);
+
     setLoading(false);
     notifications.show({
       title: "Success",
@@ -150,7 +160,7 @@ export function HomePage() {
 
   return (
     <>
-      <GradientTitle title="Welcome to Usersdot!" />
+      <Logo />
       <UserList
         users={data?.users ?? []}
         pageCount={data?.pageCount ?? 0}
@@ -167,6 +177,7 @@ export function HomePage() {
           setModalOpened(true);
         }}
         loading={loading}
+        onHeaderClick={setSort}
       />
       <UserEditModal
         opened={modalOpened}

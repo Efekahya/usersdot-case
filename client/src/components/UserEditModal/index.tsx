@@ -7,9 +7,8 @@ import {
   Select,
   Flex
 } from "@mantine/core";
-import { type User } from "@/types/user";
-
-type UserWithOldPassword = User & { oldPassword: string };
+import type { UserWithOldPassword, User } from "@/types/user";
+import validateUserForm from "@/utils/validateUserForm";
 
 interface UserEditModalProps {
   opened: boolean;
@@ -18,48 +17,6 @@ interface UserEditModalProps {
   onClose: () => void;
   onSave: (user: UserWithOldPassword) => void;
 }
-
-const handleValidation = (user: UserWithOldPassword) => {
-  const errors: { [key in keyof UserWithOldPassword]?: string } = {};
-
-  if (!user.name) {
-    errors.name = "Name is required";
-  }
-
-  if (!user.surname) {
-    errors.surname = "Surname is required";
-  }
-
-  if (!user.email) {
-    errors.email = "Email is required";
-  }
-
-  if (/^\S+@\S+\.\S+$/.test(user.email) === false) {
-    errors.email = "Email is invalid";
-  }
-
-  if (!user.age) {
-    errors.age = "Age is required";
-  }
-
-  if (!user.country) {
-    errors.country = "Country is required";
-  }
-
-  if (!user.district) {
-    errors.district = "District is required";
-  }
-
-  if (!user.role) {
-    errors.role = "Role is required";
-  }
-
-  if (user.id !== -1 && user.password && !user.oldPassword) {
-    errors.oldPassword = "Old password is required to change the password";
-  }
-
-  return errors;
-};
 
 const UserEditModal = ({
   opened,
@@ -85,7 +42,7 @@ const UserEditModal = ({
   return (
     <Modal
       opened={opened}
-      title={<h2>Edit {user.name}</h2>}
+      title={`Edit ${user.name}`}
       onClose={onClose}
       size="xs"
       styles={{
@@ -105,7 +62,6 @@ const UserEditModal = ({
               ...prev,
               name: event.target.value ?? ""
             }));
-
             setError(prev => ({ ...prev, name: "" }));
           }}
           error={error.name}
@@ -118,13 +74,11 @@ const UserEditModal = ({
               ...prev,
               surname: event.target.value ?? ""
             }));
-
             setError(prev => ({ ...prev, surname: "" }));
           }}
           error={error.surname}
         />
       </Flex>
-
       <TextInput
         label="Email"
         value={internalUser.email ?? ""}
@@ -138,7 +92,6 @@ const UserEditModal = ({
         }}
         error={error.email}
       />
-
       <NumberInput
         label="Age"
         value={internalUser.age ?? ""}
@@ -148,7 +101,6 @@ const UserEditModal = ({
             ...prev,
             age: (value as number) ?? 0
           }));
-
           setError(prev => ({ ...prev, age: "" }));
         }}
         error={error.age}
@@ -162,12 +114,10 @@ const UserEditModal = ({
               ...prev,
               country: event.target.value ?? ""
             }));
-
             setError(prev => ({ ...prev, country: "" }));
           }}
           error={error.country}
         />
-
         <TextInput
           label="District"
           value={internalUser.district ?? ""}
@@ -176,13 +126,11 @@ const UserEditModal = ({
               ...prev,
               district: event.target.value ?? ""
             }));
-
             setError(prev => ({ ...prev, district: "" }));
           }}
           error={error.district}
         />
       </Flex>
-
       <Select
         label="Role"
         data={[
@@ -197,7 +145,6 @@ const UserEditModal = ({
             ...prev,
             role: (value as "user" | "admin") ?? "user"
           }));
-
           setError(prev => ({ ...prev, role: "" }));
         }}
         error={error.role}
@@ -212,13 +159,11 @@ const UserEditModal = ({
                 ...prev,
                 oldPassword: event.target.value ?? ""
               }));
-
               setError(prev => ({ ...prev, oldPassword: "" }));
             }}
             error={error.oldPassword}
           />
         )}
-
         <TextInput
           label={user.id === -1 ? "Password" : "New Password"}
           w={user.id === -1 ? "100%" : "calc(50% - 4px)"}
@@ -228,7 +173,6 @@ const UserEditModal = ({
               ...prev,
               password: event.target.value ?? ""
             }));
-
             setError(prev => ({ ...prev, password: "" }));
           }}
           error={error.password}
@@ -237,7 +181,7 @@ const UserEditModal = ({
       <Button
         loading={loading}
         onClick={() => {
-          const errors = handleValidation(internalUser);
+          const errors = validateUserForm(internalUser);
           setError(errors);
           if (Object.keys(errors).length > 0) {
             return;

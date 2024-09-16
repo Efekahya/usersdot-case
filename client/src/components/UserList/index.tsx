@@ -6,34 +6,45 @@ import {
   Pagination,
   Select,
   Table,
+  Text,
   TextInput
 } from "@mantine/core";
 import debounce from "lodash/debounce";
+import capitalize from "lodash/capitalize";
 import { userTable } from "./styles.module.css";
 import { type GetAllUsersResult } from "@/types/results";
 import { type User } from "@/types/user";
+import { Sort } from "@/pages/Home.page";
 
 interface UserListProps extends NonNullable<GetAllUsersResult["data"]> {
   loading: boolean;
+  count: number;
   onCreate: () => void;
   onSearch: (search: string) => void;
   onPageChange: (page: number) => void;
   onPageSelect: (pageSize: string) => void;
   onItemClick: (user: User) => void;
+  onHeaderClick: (sort: Sort) => void;
 }
 
 const UserList = ({
   users,
   pageCount,
   loading,
+  count,
   onCreate,
   onItemClick,
   onPageChange,
   onPageSelect,
-  onSearch
+  onSearch,
+  onHeaderClick
 }: UserListProps) => {
   const debouncedSearch = useMemo(() => debounce(onSearch, 300), [onSearch]);
   const [internalLoading, setInternalLoading] = useState(false);
+  const [sort, setSort] = useState<{ key: keyof User; order: "asc" | "desc" }>({
+    key: "id",
+    order: "asc"
+  });
 
   // only show loading overlay if loading prop stays true for more than 300ms
   useEffect(() => {
@@ -51,24 +62,34 @@ const UserList = ({
     };
   }, [loading]);
 
+  const handleHeaderClick = (key: keyof User) => {
+    const obj = {
+      key,
+      order: (sort.key === key && sort.order === "asc" ? "desc" : "asc") as
+        | "asc"
+        | "desc"
+    };
+    setSort(obj);
+    onHeaderClick(obj);
+  };
+
   return (
     <>
       <Flex gap="sm" justify="space-between">
-        <TextInput
-          mt="lg"
-          w="240px"
-          placeholder="Search"
-          onChange={event => {
-            debouncedSearch(event.currentTarget.value);
-          }}
-        />
-        <Button
-          variant="light"
-          onClick={() => onCreate()}
-          style={{
-            marginTop: "1rem"
-          }}
-        >
+        <Flex gap="sm" align="center">
+          <TextInput
+            mt="lg"
+            w="240px"
+            placeholder="Search"
+            onChange={event => {
+              debouncedSearch(event.currentTarget.value);
+            }}
+          />
+          <Text c="gray" mt="lg">
+            {count} users
+          </Text>
+        </Flex>
+        <Button variant="light" onClick={() => onCreate()} mt="lg">
           Create User
         </Button>
       </Flex>
@@ -89,18 +110,27 @@ const UserList = ({
           >
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>Name</Table.Th>
-                <Table.Th>Surname</Table.Th>
-                <Table.Th>Email</Table.Th>
-                <Table.Th>Age</Table.Th>
-                <Table.Th>Country</Table.Th>
-                <Table.Th>District</Table.Th>
-                <Table.Th>Role</Table.Th>
-                <Table.Th>Created At</Table.Th>
-                <Table.Th>Updated At</Table.Th>
+                {Object.keys(users[0] ?? {}).map(key => (
+                  <Table.Th
+                    key={key}
+                    onClick={() => handleHeaderClick(key as keyof User)}
+                    style={{
+                      cursor: "pointer"
+                    }}
+                  >
+                    {capitalize(key.split(/(?=[A-Z])/).join(" "))}
+                    <span
+                      style={{
+                        marginLeft: "0.5rem",
+                        visibility: sort.key !== key ? "hidden" : "visible"
+                      }}
+                    >
+                      {sort.order === "asc" ? "↑" : "↓"}
+                    </span>
+                  </Table.Th>
+                ))}
               </Table.Tr>
             </Table.Thead>
-
             <Table.Tbody>
               {users?.map((user: User) => (
                 <Table.Tr
@@ -110,6 +140,7 @@ const UserList = ({
                   }}
                   onClick={() => onItemClick(user)}
                 >
+                  <Table.Td>{user.id}</Table.Td>
                   <Table.Td>{user.name}</Table.Td>
                   <Table.Td>{user.surname}</Table.Td>
                   <Table.Td>{user.email}</Table.Td>
@@ -135,7 +166,6 @@ const UserList = ({
             </Table.Tbody>
           </Table>
         </div>
-
         <Flex justify="end" align="center">
           <div
             style={{
@@ -155,7 +185,6 @@ const UserList = ({
               onChange={onPageChange}
             />
           </div>
-
           <Select
             data={["10", "20", "30", "40", "50"]}
             defaultValue="10"

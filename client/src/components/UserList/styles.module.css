@@ -18,4 +18,11 @@
   table {
     min-width: 1200px;
   }
+
+  th {
+    &:hover {
+      background-color: var(--mantine-color-usersdotOrange-0);
+      cursor: pointer;
+    }
+  }
 }
