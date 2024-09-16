@@ -20,9 +20,6 @@ jobs:
       - name: Enable corepack
         run: npm install -g corepack && corepack enable
 
-      - name: cd client
-        run: cd client
-
       - name: Set up Node.js for frontend
         uses: actions/setup-node@v3
         with:
@@ -34,18 +31,15 @@ jobs:
 
       - name: Install Node.js dependencies for frontend
         run: yarn install
+        working-directory: ./client
 
       - name: Run linters for frontend
         run: yarn lint
+        working-directory: ./client
 
       - name: Fix prettier issues for frontend
         run: yarn prettier:write
-
-      - name: cd ..
-        run: cd ..
-
-      - name: cd backend
-        run: cd backend
+        working-directory: ./client
 
       - name: Set up Node.js for backend
         uses: actions/setup-node@v3
@@ -56,12 +50,15 @@ jobs:
 
       - name: Install Node.js dependencies for backend
         run: yarn install
+        working-directory: ./backend
 
       - name: Run linters for backend
         run: yarn lint
+        working-directory: ./backend
 
       - name: Fix prettier issues for backend
         run: yarn prettier:write
+        working-directory: ./backend
 
         # Fail the workflow if the linters fail
         continue-on-error: false
