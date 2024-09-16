@@ -8,7 +8,8 @@ const client = new Client({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   port: parseInt(process.env.DB_PORT),
-  database: process.env.DB_NAME
+  database: process.env.DB_NAME,
+  ssl: process.env.DB_SSL === "true"
 });
 
 const generateUserQueryString = async (user: Omit<User, "id">) => {
