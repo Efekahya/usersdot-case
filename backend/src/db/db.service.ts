@@ -19,7 +19,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       port: this.configService.get<number>("DB_PORT"),
       user: this.configService.get("DB_USER"),
       password: this.configService.get("DB_PASSWORD"),
-      database: this.configService.get("DB_NAME")
+      database: this.configService.get("DB_NAME"),
+      ssl: process.env.DB_SSL === "true"
     });
   }
 
