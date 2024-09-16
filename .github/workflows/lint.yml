@@ -54,7 +54,7 @@ jobs:
         working-directory: ./backend
 
       - name: Fix prettier issues for backend
-        run: yarn prettier:write
+        run: yarn prettier
         working-directory: ./backend
 
         # Fail the workflow if the linters fail
