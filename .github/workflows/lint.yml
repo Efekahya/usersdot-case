@@ -1,0 +1,55 @@
+name: Lint
+
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  run-linters:
+    name: Run linters
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 21
+          cache: "yarn"
+
+      # ESLint and Prettier must be in `package.json`
+      - name: cd frontend
+        run: cd frontend
+
+      - name: Install Node.js dependencies for frontend
+        run: yarn install
+
+      - name: Run linters for frontend
+        run: yarn lint
+
+      - name: Fix prettier issues for frontend
+        run: yarn prettier:write
+
+      - name: cd ..
+        run: cd ..
+
+      - name: cd backend
+        run: cd backend
+
+      - name: Install Node.js dependencies for backend
+        run: yarn install
+
+      - name: Run linters for backend
+        run: yarn lint
+
+      - name: Fix prettier issues for backend
+        run: yarn prettier:write
+
+        # Fail the workflow if the linters fail
+        continue-on-error: false
