@@ -2,17 +2,18 @@
   width: 200px;
   height: 100px;
   background: linear-gradient(to right, #ff8808 30%, #2700a1 50%);
-  -webkit-mask: url(navbar-logo.svg) no-repeat center/contain;
-  mask: url(navbar-logo.svg) no-repeat center/contain;
+  -webkit-mask: url("navbar-logo.svg") no-repeat center/contain;
+  mask: url("navbar-logo.svg") no-repeat center/contain;
   background-size: 500% auto;
 
-  animation: textShine 5s ease-in-out infinite alternate;
+  animation: text-shine 5s ease-in-out infinite alternate;
 }
 
-@keyframes textShine {
+@keyframes text-shine {
   0% {
     background-position: 0% 50%;
   }
+
   100% {
     background-position: 100% 50%;
   }
