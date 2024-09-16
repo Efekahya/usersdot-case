@@ -26,6 +26,14 @@
       }
     ]
   },
-  "include": ["src", "vite.config.mjs", "tailwind.config.js"],
+  "include": [
+    "vite.config.mjs",
+    "tailwind.config.js",
+    "**/*.ts",
+    "**/*.tsx",
+    "vitest.config.ts",
+    "vitest.setup.ts",
+    "vite-env.d.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }
