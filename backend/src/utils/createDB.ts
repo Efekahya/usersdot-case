@@ -7,15 +7,6 @@ const client = new Client({
   port: parseInt(process.env.DB_PORT)
 });
 
-export const checkDB = async (name: string) => {
-  await client.connect();
-  const res = await client.query(
-    `SELECT 1 FROM pg_database WHERE datname = '${name}'`
-  );
-  await client.end();
-  return res.rowCount > 0;
-};
-
 export const createDB = async () => {
   await client.connect();
   const dbNameRes = await client.query(

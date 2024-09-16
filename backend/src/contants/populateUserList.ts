@@ -1,4 +1,4 @@
-import { User } from "src/users/interfaces/user.interface";
+import { User } from "src/types/user";
 
 const initialUsers: Omit<User, "id">[] = [
   {

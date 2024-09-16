@@ -1,5 +1,5 @@
 import { Client } from "pg";
-import { User } from "src/users/interfaces/user.interface";
+import { User } from "src/types/user";
 import * as bcrypt from "bcrypt";
 import initialUsers from "src/contants/populateUserList";
 
